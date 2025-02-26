@@ -1,6 +1,8 @@
 package com.example.virtual_city.util;
 
 
+import com.example.virtual_city.model.Token;
+import com.example.virtual_city.service.TokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +13,11 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private static final String SECRET_KEY = "your_secret_key_your_secret_key_your"; // Must be at least 32 characters for HMAC
+    private final TokenService tokenService;
+
+    public JwtUtil(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes()); // Generates a secure key
@@ -34,7 +41,11 @@ public class JwtUtil {
                 .getSubject();
     }
 
+    //.2
     public boolean validateToken(String token, UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername());
+        return extractUsername(token).equals(userDetails.getUsername())
+                && !tokenService.findByToken(token).map(Token::isRevoked).orElse(true);
     }
+    //.2
+
 }
