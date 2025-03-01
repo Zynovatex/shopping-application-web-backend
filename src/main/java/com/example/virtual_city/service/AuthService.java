@@ -3,13 +3,11 @@ package com.example.virtual_city.service;
 import com.example.virtual_city.dto.LoginRequest;
 import com.example.virtual_city.dto.RegisterRequest;
 import com.example.virtual_city.model.Role;
-import com.example.virtual_city.model.Token;
 import com.example.virtual_city.model.User;
 import com.example.virtual_city.repository.UserRepository;
 import com.example.virtual_city.util.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,56 +18,65 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-    private final TokenService tokenService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil, AuthenticationManager authenticationManager,UserDetailsService
-                               userDetailsService, TokenService tokenService) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil,
+                       AuthenticationManager authenticationManager,
+                       OtpService otpService,
+                       EmailService emailService
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
-        this.tokenService = tokenService;
+        this.otpService = otpService;
+        this.emailService = emailService;
     }
 
     public String registerUser(RegisterRequest request) {
         User user = new User();
+        user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         userRepository.save(user);
         return "User registered successfully";
     }
-
     public String authenticate(LoginRequest request) {
-        System.out.println("Attempting login for: " + request.getEmail());
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        return jwtUtil.generateToken(new UserDetailsImpl(user));
+    }
 
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid username or password");
+
+    //OTP
+    public String sendOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String otp = otpService.generateOtp(user);
+        emailService.sendEmail(user.getEmail(), "Your OTP Code", "Your OTP is: " + otp);
+
+        return "OTP sent to email";
+    }
+
+    public boolean resetPasswordWithOtp(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!otpService.validateOtp(otp, user)) {
+            return false;  // Invalid OTP
         }
 
-
-
-
-        // Store token in database
-        //.2
-
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-        String jwtToken = jwtUtil.generateToken(userDetails);
-
-        Token token = new Token();
-        token.setToken(jwtToken);
-        token.setRevoked(false);
-        token.setUser(userRepository.findByEmail(request.getEmail()).orElseThrow());
-        tokenService.saveToken(token);
-
-        return jwtToken;
-        //.2
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
+    //OTP
+
 }
 

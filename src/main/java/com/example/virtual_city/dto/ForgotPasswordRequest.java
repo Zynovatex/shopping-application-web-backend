@@ -1,12 +1,7 @@
 package com.example.virtual_city.dto;
 
-
-
 public class ForgotPasswordRequest {
     private String email;
-
-    // Constructor (Optional)
-    //public ForgotPasswordRequest() {}
 
     // Getters & Setters
     public String getEmail() {

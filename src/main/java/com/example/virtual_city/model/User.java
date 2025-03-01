@@ -2,6 +2,7 @@ package com.example.virtual_city.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 
@@ -18,7 +19,7 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
-
+    @Column(nullable = false)
     private String name;
 
     private String password;
@@ -29,8 +30,12 @@ public class User {
     private boolean enabled = true;
 
     // Manually adding getter methods
+
     public String getEmail() {
         return email;
+    }
+    public String getName() {
+        return name;
     }
 
     public String getPassword() {
@@ -47,5 +52,8 @@ public class User {
     }
     public void setRole(Role role) {
         this.role = role;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -1,8 +1,5 @@
 package com.example.virtual_city.dto;
 
-
-
-
 public class LoginRequest {
     private String email;
     private String password;
