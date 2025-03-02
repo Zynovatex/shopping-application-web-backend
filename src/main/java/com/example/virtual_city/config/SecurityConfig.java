@@ -38,6 +38,7 @@ public class SecurityConfig {
                 // Configure endpoint authorization
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/shop/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Set session management to stateless
