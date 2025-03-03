@@ -1,5 +1,6 @@
 package com.example.virtual_city.controller;
 
+import com.example.virtual_city.dto.ShopListResponseDTO;
 import com.example.virtual_city.dto.ShopResponseDTO;
 import com.example.virtual_city.service.ShopService;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +18,13 @@ public class ShopController {
     }
 
     @GetMapping("/list")
-    public List<ShopResponseDTO> getAllShops() {
+    public List<ShopListResponseDTO> getAllShops() {
         return shopService.getAllShops();
     }
 
-
+    @GetMapping("/{id}")
+    public ShopResponseDTO getShopWithProducts(@PathVariable Long id) {
+        return shopService.getShopWithProducts(id);
+    }
 
 }
