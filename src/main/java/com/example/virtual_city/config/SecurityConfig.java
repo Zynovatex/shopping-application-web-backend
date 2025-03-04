@@ -39,6 +39,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/shop/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")  // ✅ Only ADMIN can access
+                        .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")  // ✅ Only SELLER can access
+                        .requestMatchers("/api/buyer/**").hasAuthority("ROLE_BUYER")// ✅ Only BUYER can access
                         .anyRequest().authenticated()
                 )
                 // Set session management to stateless

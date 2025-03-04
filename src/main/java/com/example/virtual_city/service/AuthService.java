@@ -4,6 +4,7 @@ import com.example.virtual_city.dto.LoginRequest;
 import com.example.virtual_city.dto.RegisterRequest;
 import com.example.virtual_city.model.Role;
 import com.example.virtual_city.model.User;
+import com.example.virtual_city.repository.RoleRepository;
 import com.example.virtual_city.repository.UserRepository;
 import com.example.virtual_city.util.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,13 +21,15 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final RoleRepository roleRepository;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil,
                        AuthenticationManager authenticationManager,
                        OtpService otpService,
-                       EmailService emailService
+                       EmailService emailService,
+                       RoleRepository roleRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -34,6 +37,7 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.roleRepository = roleRepository;
     }
 
     public String registerUser(RegisterRequest request) {
@@ -41,9 +45,14 @@ public class AuthService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER);
+
+        // ✅ Find role from database ( if not found throw error)
+        Role role = roleRepository.findByName(request.getRole())
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRole(role);
         userRepository.save(user);
-        return "User registered successfully";
+
+        return "User registered successfully with role: " + user.getRole().getName();
     }
     public String authenticate(LoginRequest request) {
         authenticationManager.authenticate(
