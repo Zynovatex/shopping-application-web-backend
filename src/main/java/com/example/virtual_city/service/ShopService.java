@@ -75,4 +75,11 @@ public class ShopService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while saving the shop.");
         }
     }
+    // ✅ New method: Verify if a seller owns a shop
+    public Shop verifySellerOwnsShop(User seller) {
+        return shopRepository.findBySeller(seller)
+                .stream()
+                .findFirst() // ✅ Get the first shop owned by the seller
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seller does not own a shop"));
+    }
 }
