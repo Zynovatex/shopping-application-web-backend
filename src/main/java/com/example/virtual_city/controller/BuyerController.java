@@ -34,5 +34,39 @@ public class BuyerController {
         }
         return cartService.addToCart(userDetails.getUsername(), cartItem);
     }
+
+    @GetMapping("/cart")
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only buyers can view their cart
+    public Cart getCart(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return cartService.getCartForBuyer(userDetails.getUsername());
+    }
+
+    @DeleteMapping("/cart/remove")
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only BUYERS can remove items
+    public Cart removeFromCart(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Long productId) {
+        if (userDetails == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return cartService.removeItemFromCart(userDetails.getUsername(), productId);
+    }
+
+    @PutMapping("/cart/update")
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only BUYERS can update cart
+    public Cart updateCartQuantity(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam Long productId,
+            @RequestParam int quantity
+    ) {
+        if (userDetails == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return cartService.updateCartQuantity(userDetails.getUsername(), productId, quantity);
+    }
+
+
+
 }
 

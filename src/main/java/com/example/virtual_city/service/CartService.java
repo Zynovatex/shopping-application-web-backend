@@ -22,4 +22,40 @@ public class CartService {
         cartRepository.saveCart(buyerEmail, cart);
         return cart;
     }
+
+    public Cart getCartForBuyer(String buyerEmail) {
+        return cartRepository.findCartByBuyer(buyerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+    }
+
+    public Cart removeItemFromCart(String buyerEmail, Long productId) {
+        Cart cart = cartRepository.findCartByBuyer(buyerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+
+        if (!cart.getItems().containsKey(productId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found in cart");
+        }
+
+        cart.getItems().remove(productId);
+        cartRepository.saveCart(buyerEmail, cart);  // ✅ Save updated cart after removal
+        return cart;
+    }
+
+    public Cart updateCartQuantity(String buyerEmail, Long productId, int quantity) {
+        Cart cart = cartRepository.findCartByBuyer(buyerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+
+        CartItem cartItem = cart.getItems().get(productId);
+        if (cartItem == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found in cart");
+        }
+
+        cartItem.setQuantity(quantity); // ✅ Update the quantity
+        cartRepository.saveCart(buyerEmail, cart); // ✅ Save updated cart
+        return cart;
+    }
+
+
+
 }
+

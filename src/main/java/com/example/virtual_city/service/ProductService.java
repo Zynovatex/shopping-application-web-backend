@@ -98,6 +98,7 @@ public class ProductService {
         dto.setEstimatedDeliveryTime(p.getEstimatedDeliveryTime());
         dto.setShippingCost(p.getShippingCost());
         dto.setImages(p.getImages());
+        dto.setCategories(p.getCategories());
         // …set all other fields…
         return dto;
     }
