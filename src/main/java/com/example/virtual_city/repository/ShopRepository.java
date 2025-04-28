@@ -10,4 +10,8 @@ import java.util.Optional;
 public interface ShopRepository extends JpaRepository<Shop, Long> {
     List<Shop> findBySeller(User seller);
     Optional<Shop> findByIdAndSeller(Long id, User seller);
+
+    // NEW: for public listing of approved shops
+    List<Shop> findByApprovedTrue();
+    Optional<Shop> findByIdAndApprovedTrue(Long id);
 }

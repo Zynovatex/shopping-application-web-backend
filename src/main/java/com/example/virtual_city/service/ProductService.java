@@ -27,38 +27,54 @@ public class ProductService {
         this.shopService = shopService;
     }
 
-    public Product addProduct(String sellerEmail, ProductDTO productDTO) {
+    // Updated addProduct to enforce shop ownership
+    public Product addProduct(String sellerEmail, ProductDTO dto) {
         User seller = userRepository.findByEmail(sellerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Seller not found"));
 
-        // ✅ Ensure the seller owns a shop
+        // Verify seller owns at least one shop
         Shop shop = shopService.verifySellerOwnsShop(seller);
 
+        // Ensure DTO.shopId matches the seller's shop
+        if (!shop.getId().equals(dto.getShopId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Cannot add product to this shop");
+        }
+
+        // Build and persist the Product
         Product product = new Product();
         product.setSeller(seller);
-        product.setProductName(productDTO.getProductName());
-        product.setDescription(productDTO.getDescription());
-        product.setQuantity(productDTO.getQuantity());
-        product.setBrand(productDTO.getBrand());
-        product.setImages(productDTO.getImages());  // ✅ Store Firebase URLs as strings
-        product.setCategories(productDTO.getCategories());
-        product.setPrice(productDTO.getPrice());
-        product.setDiscountPrice(productDTO.getDiscountPrice());
-        product.setIngredients(productDTO.getIngredients());
-        product.setExpireDate(productDTO.getExpireDate());
-        product.setTaxPrice(productDTO.getTaxPrice());
-        product.setSeoTitle(productDTO.getSeoTitle());
-        product.setSeoDescription(productDTO.getSeoDescription());
-        product.setTags(productDTO.getTags());
-        product.setSizes(productDTO.getSizes());
-        product.setWeight(productDTO.getWeight());
-        product.setHeight(productDTO.getHeight());
-        product.setVolume(productDTO.getVolume());
-        product.setShippingCountries(productDTO.getShippingCountries());
-        product.setEstimatedDeliveryTime(productDTO.getEstimatedDeliveryTime());
-        product.setShippingCost(productDTO.getShippingCost());
+        product.setShop(shop);
+        product.setProductName(dto.getProductName());
+        product.setDescription(dto.getDescription());
+        product.setQuantity(dto.getQuantity());
+        product.setBrand(dto.getBrand());
+        product.setImages(dto.getImages());
+        product.setCategories(dto.getCategories());
+        product.setPrice(dto.getPrice());
+        product.setDiscountPrice(dto.getDiscountPrice());
+        product.setIngredients(dto.getIngredients());
+        product.setExpireDate(dto.getExpireDate());
+        product.setTaxPrice(dto.getTaxPrice());
+        product.setSeoTitle(dto.getSeoTitle());
+        product.setSeoDescription(dto.getSeoDescription());
+        product.setTags(dto.getTags());
+        product.setSizes(dto.getSizes());
+        product.setWeight(dto.getWeight());
+        product.setHeight(dto.getHeight());
+        product.setVolume(dto.getVolume());
+        product.setShippingCountries(dto.getShippingCountries());
+        product.setEstimatedDeliveryTime(dto.getEstimatedDeliveryTime());
+        product.setShippingCost(dto.getShippingCost());
 
         return productRepository.save(product);
+    }
+
+    // NEW: fetch products for a given public shop
+    public List<Product> getProductsForShop(Long shopId) {
+        Shop shop = shopService.getApprovedShop(shopId);
+        return productRepository.findByShop(shop);
     }
 
     //Get product details from db

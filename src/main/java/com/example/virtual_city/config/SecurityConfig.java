@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // Configure endpoint authorization
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/shops").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")  // ✅ Only ADMIN can access
                         .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")  // ✅ Only SELLER can access

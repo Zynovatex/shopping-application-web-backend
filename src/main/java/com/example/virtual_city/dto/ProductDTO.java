@@ -6,6 +6,7 @@ import java.util.List;
 
 @Data
 public class ProductDTO {
+    private Long shopId;
     private String productName;
     private String description;
     private int quantity;
@@ -198,5 +199,13 @@ public class ProductDTO {
 
     public void setShippingCost(double shippingCost) {
         this.shippingCost = shippingCost;
+    }
+
+    public Long getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(Long shopId) {
+        this.shopId = shopId;
     }
 }

@@ -2,6 +2,8 @@ package com.example.virtual_city.dto;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import com.example.virtual_city.model.Product;
 import lombok.Data;
 
 public class ProductResponseDTO {
@@ -27,6 +29,7 @@ public class ProductResponseDTO {
     List<String> shippingCountries;
     int estimatedDeliveryTime;
     double shippingCost;
+    private String imageUrl;
 
     public double getShippingCost() {
         return shippingCost;
@@ -202,5 +205,26 @@ public class ProductResponseDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public static ProductResponseDTO fromEntity(Product product) {
+        ProductResponseDTO dto = new ProductResponseDTO();
+        dto.setId(product.getId());
+        dto.setProductName(product.getProductName());
+        dto.setPrice(product.getPrice());
+        dto.setDescription(product.getDescription());
+        // pick first image if available
+        if (!product.getImages().isEmpty()) {
+            dto.setImageUrl(product.getImages().get(0));
+        }
+        return dto;
     }
 }

@@ -75,11 +75,29 @@ public class ShopService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while saving the shop.");
         }
     }
+
+    // NEW: return all approved shops for public listing
+    public List<Shop> getAllApprovedShops() {
+        return shopRepository.findByApprovedTrue();
+    }
+
+    // NEW: get one approved shop by ID
+    public Shop getApprovedShop(Long id) {
+        return shopRepository.findByIdAndApprovedTrue(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Shop not found or not approved"));
+    }
+
     // ✅ New method: Verify if a seller owns a shop
     public Shop verifySellerOwnsShop(User seller) {
         return shopRepository.findBySeller(seller)
                 .stream()
                 .findFirst() // ✅ Get the first shop owned by the seller
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seller does not own a shop"));
+    }
+
+    // ✅ New method to fetch all shops
+    public List<Shop> getAllShops() {
+        return shopRepository.findAll(); // Retrieve all shops from the database
     }
 }

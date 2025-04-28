@@ -29,7 +29,9 @@ public class Shop {
     private String area;
     private String shopType;
     private boolean deliveryAvailable;
+    @Column(name = "description", length = 1000)
     private String description;
+
 
     @ElementCollection
     private List<String> shopImages; // ✅ Store Image URLs as Strings

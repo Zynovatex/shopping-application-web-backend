@@ -22,6 +22,11 @@ public class Product {
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;  // ✅ Product belongs to a seller
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    private Shop shop;
+
+
     private String productName;
     private String description;
     private int quantity;
@@ -241,5 +246,13 @@ public class Product {
 
     public void setShippingCost(double shippingCost) {
         this.shippingCost = shippingCost;
+    }
+
+    public Shop getShop() {
+        return shop;
+    }
+
+    public void setShop(Shop shop) {
+        this.shop = shop;
     }
 }
