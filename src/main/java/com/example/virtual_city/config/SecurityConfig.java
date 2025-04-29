@@ -1,5 +1,6 @@
 package com.example.virtual_city.config;
 
+import com.example.virtual_city.filter.JwtAuthenticationFilter;
 import com.example.virtual_city.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +21,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.example.virtual_city.filter.JwtAuthenticationFilter;
-
 
 import java.util.List;
 
@@ -39,41 +38,47 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors()
-                .and()
-                // Disable CSRF since you're likely using a stateless authentication mechanism
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                // Configure endpoint authorization
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")  // ✅ Only ADMIN can access
-                        .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")  // ✅ Only SELLER can access
-                        .requestMatchers("/api/buyer/**").hasAuthority("ROLE_BUYER")// ✅ Only BUYER can access
+                        // ✅ Public endpoints
+                        .requestMatchers(
+                                "/",
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/send-otp",
+                                "/api/auth/reset-password-otp",
+                                "/api/auth/set-password"
+                        ).permitAll()
+
+                        // ✅ Public product listing
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+
+                        // ✅ Role-based access
+                        .requestMatchers(HttpMethod.GET, "/api/admin/overview").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/create").hasAuthority("ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/admin/dashboard").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")
+                        .requestMatchers("/api/buyer/**").hasAuthority("ROLE_BUYER")
+
                         .anyRequest().authenticated()
                 )
-                // Set session management to stateless
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        // Add the JWT filter before the UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow requests from your frontend
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-        // Allow HTTP methods
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // frontend URL
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Allow headers your frontend might send
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        // Enable credentials (cookies, authorization headers, etc.)
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply CORS configuration to all endpoints
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

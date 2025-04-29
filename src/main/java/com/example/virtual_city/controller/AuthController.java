@@ -4,21 +4,35 @@ import com.example.virtual_city.dto.ForgotPasswordRequest;
 import com.example.virtual_city.dto.LoginRequest;
 import com.example.virtual_city.dto.RegisterRequest;
 import com.example.virtual_city.dto.ResetPasswordRequest;
+import com.example.virtual_city.dto.SetPasswordRequest;
+import com.example.virtual_city.model.AdminStatus;
+import com.example.virtual_city.model.User;
+import com.example.virtual_city.repository.UserRepository;
 import com.example.virtual_city.service.AuthService;
 import com.example.virtual_city.service.EmailService;
+import com.example.virtual_city.service.UserDetailsImpl;
+import com.example.virtual_city.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
+
     private final AuthService authService;
-
-
-
-    public AuthController(AuthService authService, EmailService emailService) {
-        this.authService = authService;
-    }
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;  // ✅ Inject PasswordEncoder
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
@@ -26,10 +40,22 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.authenticate(request));
-    }
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        String token = jwtUtil.generateToken(new UserDetailsImpl(user));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("allowedModules", user.getAllowedModules());
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestBody ForgotPasswordRequest request) {
@@ -39,11 +65,29 @@ public class AuthController {
 
     @PostMapping("/reset-password-otp")
     public ResponseEntity<String> resetPasswordWithOtp(@RequestBody ResetPasswordRequest request) {
-        boolean success = authService.resetPasswordWithOtp(request.getEmail(), request.getOtp(), request.getNewPassword());
-        return success ? ResponseEntity.ok("Password reset successful") : ResponseEntity.badRequest().body("Invalid OTP");
+        boolean success = authService.resetPasswordWithOtp(
+                request.getEmail(),
+                request.getOtp(),
+                request.getNewPassword()
+        );
+        return success ? ResponseEntity.ok("Password reset successful")
+                : ResponseEntity.badRequest().body("Invalid OTP");
     }
 
+    // ✅ New endpoint for setting password after invitation
+    @PostMapping("/set-password")
+    public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (user.getPassword() != null) {
+            return ResponseEntity.status(403).body("Password already set.");
+        }
 
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setStatus(AdminStatus.ACTIVE);  // ✅ Activate account
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password set successfully!");
+    }
 }
-

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -21,41 +22,29 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
+
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER)  // ✅ Now role is a relation instead of an Enum
-    @JoinColumn(name = "role_id", nullable = false)  // ✅ Stores the role_id from Role table
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @Column(nullable = false)
     private boolean enabled = true;
 
-    // Manually adding getter methods
+    @Column(name = "is_super_admin", nullable = false)
+    private boolean isSuperAdmin = false;
 
-    public String getEmail() {
-        return email;
-    }
-    public String getName() {
-        return name;
-    }
-    public Role getRole() { return role; }  // ✅ Getter for role
-    public String getPassword() {
-        return password;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private AdminStatus status = AdminStatus.PENDING;
 
-    // Manually adding setter methods
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    public void setRole(Role role) {
-        this.role = role;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_allowed_modules", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "module")
+    private List<String> allowedModules;
 }
