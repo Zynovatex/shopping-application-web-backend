@@ -16,6 +16,13 @@ import java.util.List;
 @AllArgsConstructor
 public class User {
 
+    @Column(name = "admin_id", unique = true)
+    private String adminId;
+
+    @Column(name = "last_login")
+    private String lastLogin;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -8,8 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
-
+import com.example.virtual_city.model.User;
 @Component
 public class JwtUtil {
     private static final String SECRET_KEY = "your_secret_key_your_secret_key_your"; // Must be at least 32 characters
@@ -21,17 +22,26 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // ✅ Existing method — basic token generation (no roles)
-    public String generateToken(UserDetails userDetails) {
+    // ✅ Updated: Now includes role as "authorities" claim
+    public String generateToken(User user) {
+        String role = user.getRole().getName(); // Assuming Role has a getName() like "ROLE_ADMIN"
+
+        Map<String, Object> claims = Map.of(
+                "authorities", List.of(role),
+                "permissions", user.getAllowedModules()
+        );
+
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(claims)
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ✅ New method — generate token with custom claims like roles/authorities
+
+    // Still supports custom claims if needed elsewhere
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)

@@ -10,12 +10,8 @@ import com.example.virtual_city.repository.UserRepository;
 import com.example.virtual_city.util.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class AuthService {
@@ -27,7 +23,7 @@ public class AuthService {
     private final OtpService otpService;
     private final EmailService emailService;
     private final RoleRepository roleRepository;
-    private final UserDetailsServiceImpl userDetailsService; // ✅ added
+    private final UserDetailsServiceImpl userDetailsService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -44,7 +40,7 @@ public class AuthService {
         this.otpService = otpService;
         this.emailService = emailService;
         this.roleRepository = roleRepository;
-        this.userDetailsService = userDetailsService; // ✅ injected
+        this.userDetailsService = userDetailsService;
     }
 
     public String registerUser(RegisterRequest request) {
@@ -85,7 +81,7 @@ public class AuthService {
         return true;
     }
 
-    // ✅ Login method with roles included in JWT
+    // ✅ Modified: Includes permissions in JWT using user entity
     public String login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -94,11 +90,18 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("authorities", user.getRole().getName()); // e.g., ROLE_ADMIN
+        return jwtUtil.generateToken(user); // ✅ Permissions + Role included
+    }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+    // 🆕 Super Admin password confirmation for reset action
+    public boolean validateSuperAdminPassword(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Super Admin not found"));
 
-        return jwtUtil.generateToken(claims, userDetails);
+        if (!user.isSuperAdmin()) {
+            throw new RuntimeException("Only Super Admins can perform this action");
+        }
+
+        return passwordEncoder.matches(password, user.getPassword());
     }
 }

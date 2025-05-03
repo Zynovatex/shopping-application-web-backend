@@ -1,12 +1,11 @@
 package com.example.virtual_city.dto;
 
-
 public class ResetPasswordRequest {
     private String email;
-    private String otp;
+    private String otp; // Optional: Only needed for OTP reset
     private String newPassword;
+    private String password; // ✅ This is the super admin's current password
 
-    // ✅ Constructor (Optional)
     public ResetPasswordRequest() {}
 
     // ✅ Getters
@@ -22,6 +21,10 @@ public class ResetPasswordRequest {
         return newPassword;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     // ✅ Setters
     public void setEmail(String email) {
         this.email = email;
@@ -34,5 +37,8 @@ public class ResetPasswordRequest {
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
-}
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}

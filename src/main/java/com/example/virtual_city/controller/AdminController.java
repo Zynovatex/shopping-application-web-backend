@@ -1,63 +1,140 @@
 package com.example.virtual_city.controller;
 
+import com.example.virtual_city.dto.CreateAdminRequest;
+import com.example.virtual_city.dto.AdminResponseDTO;
+import com.example.virtual_city.dto.ResetPasswordRequest;
+import com.example.virtual_city.dto.UpdateAdminRequestDTO;
+import com.example.virtual_city.model.AdminStatus;
+import com.example.virtual_city.model.Role;
+import com.example.virtual_city.model.User;
+import com.example.virtual_city.repository.RoleRepository;
+import com.example.virtual_city.repository.UserRepository;
+import com.example.virtual_city.service.AdminOverviewService;
+import com.example.virtual_city.service.AdminService;
+import com.example.virtual_city.service.EmailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin")
+@RequiredArgsConstructor
 public class AdminController {
+
+    private final AdminOverviewService adminOverviewService;
+    private final AdminService adminService;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
+
+    private static final boolean USE_MOCK = false;
 
     @GetMapping("/overview")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
     public ResponseEntity<Map<String, Object>> getAdminOverview() {
-        Map<String, Object> response = new HashMap<>();
-
-        // 👤 Admin Stats (for StatCard)
-        List<Map<String, String>> stats = List.of(
-                Map.of("title", "Total Admins", "value", "23423"),
-                Map.of("title", "Active Admins", "value", "12334"),
-                Map.of("title", "Last 7 Days Activity", "value", "233"),
-                Map.of("title", "Pending Invites", "value", "634")
-        );
-
-        // 📊 Pie Chart Data (for AMpieChart)
-        List<Map<String, Object>> pageAccessBreakdown = List.of(
-                Map.of("name", "Product", "value", 40),
-                Map.of("name", "Order", "value", 30),
-                Map.of("name", "Analytics", "value", 20),
-                Map.of("name", "Seller", "value", 10)
-        );
-
-        // 📈 Line Chart Data (for AMlineChart)
-        List<Map<String, Object>> activityTrend = List.of(
-                Map.of("name", "Day 1", "total", 30, "active", 20, "pending", 10),
-                Map.of("name", "Day 2", "total", 32, "active", 21, "pending", 11),
-                Map.of("name", "Day 3", "total", 34, "active", 22, "pending", 12),
-                Map.of("name", "Day 4", "total", 36, "active", 23, "pending", 13),
-                Map.of("name", "Day 5", "total", 40, "active", 25, "pending", 15),
-                Map.of("name", "Day 6", "total", 42, "active", 28, "pending", 14),
-                Map.of("name", "Day 7", "total", 45, "active", 30, "pending", 15)
-        );
-
-        // 📊 Bar Chart Data (for AMbarChart)
-        List<Map<String, Object>> rolesByActivity = List.of(
-                Map.of("name", "Product Manager", "Actions", 5400),
-                Map.of("name", "Order Admin", "Actions", 3900),
-                Map.of("name", "Analytics Admin", "Actions", 2800),
-                Map.of("name", "Seller Manager", "Actions", 3800),
-                Map.of("name", "Support Admin", "Actions", 2300)
-        );
-
-        response.put("stats", stats);
-        response.put("pageAccessBreakdown", pageAccessBreakdown);
-        response.put("activityTrend", activityTrend);
-        response.put("rolesByActivity", rolesByActivity);
-
-        return ResponseEntity.ok(response);
+        if (USE_MOCK) {
+            Map<String, Object> mockResponse = new HashMap<>();
+            mockResponse.put("stats", List.of());
+            mockResponse.put("pageAccessBreakdown", List.of());
+            mockResponse.put("activityTrend", List.of());
+            mockResponse.put("rolesByActivity", List.of());
+            return ResponseEntity.ok(mockResponse);
+        } else {
+            return ResponseEntity.ok(adminOverviewService.getAdminOverview());
+        }
     }
 
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<String> createAdmin(@RequestBody CreateAdminRequest request) {
+        Optional<User> existing = userRepository.findByEmail(request.getEmail());
+        if (existing.isPresent()) {
+            return ResponseEntity.badRequest().body("Admin already exists");
+        }
 
+        Role role = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Admin role not found"));
+
+        User newAdmin = new User();
+        newAdmin.setEmail(request.getEmail());
+        newAdmin.setName(request.getName());
+        newAdmin.setPassword("TEMPORARY");
+        newAdmin.setRole(role);
+        newAdmin.setSuperAdmin(false);
+        newAdmin.setStatus(AdminStatus.PENDING);
+        newAdmin.setAllowedModules(request.getAllowedModules());
+
+        userRepository.save(newAdmin);
+        emailService.sendAdminInvitationEmail(newAdmin);
+
+        return ResponseEntity.ok("Admin created and invitation sent.");
+    }
+
+    @GetMapping("/admins")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<List<AdminResponseDTO>> getAllAdmins(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String category
+    ) {
+        List<AdminResponseDTO> admins = adminService.getAllAdmins(search, role, status, category);
+        return ResponseEntity.ok(admins);
+    }
+
+    @GetMapping("/admins/{id}")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<AdminResponseDTO> getAdminById(@PathVariable Long id) {
+        AdminResponseDTO admin = adminService.getAdminById(id);
+        return ResponseEntity.ok(admin);
+    }
+
+    // ✅ Reset Admin Password (Super Admin must confirm their own password)
+    @PostMapping("/admins/{id}/reset-password")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<String> resetAdminPassword(
+            @PathVariable Long id,
+            @RequestBody ResetPasswordRequest request
+    ) {
+        String superAdminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Optional<User> superAdminOpt = userRepository.findByEmail(superAdminEmail);
+        if (superAdminOpt.isEmpty()) {
+            return ResponseEntity.status(403).body("Super admin not found.");
+        }
+
+        User superAdmin = superAdminOpt.get();
+
+        if (!passwordEncoder.matches(request.getPassword(), superAdmin.getPassword())) {
+            return ResponseEntity.status(403).body("Invalid super admin password.");
+        }
+
+        User targetAdmin = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Admin not found."));
+
+        String newTempPassword = "Temp@1234"; // You can randomize this in future
+        targetAdmin.setPassword(passwordEncoder.encode(newTempPassword));
+        targetAdmin.setStatus(AdminStatus.PENDING); // Mark status as pending so user must reset
+        userRepository.save(targetAdmin);
+
+        emailService.sendAdminResetPasswordEmail(targetAdmin);
+
+        return ResponseEntity.ok("Reset password email sent successfully.");
+    }
+
+    @PutMapping("/admins/{id}")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<String> updateAdminDetails(
+            @PathVariable Long id,
+            @RequestBody UpdateAdminRequestDTO dto
+    ) {
+        adminService.updateAdmin(id, dto);
+        return ResponseEntity.ok("Admin details updated successfully.");
+    }
 }

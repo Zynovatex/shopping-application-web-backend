@@ -32,7 +32,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;  // ✅ Inject PasswordEncoder
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
@@ -48,7 +48,7 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        String token = jwtUtil.generateToken(new UserDetailsImpl(user));
+        String token = jwtUtil.generateToken(user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
@@ -74,18 +74,19 @@ public class AuthController {
                 : ResponseEntity.badRequest().body("Invalid OTP");
     }
 
-    // ✅ New endpoint for setting password after invitation
+    // ✅ Set password for invited admins using AdminStatus check
     @PostMapping("/set-password")
     public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (user.getPassword() != null) {
+        // ✅ Check if password was already set by verifying status
+        if (user.getStatus() != AdminStatus.PENDING) {
             return ResponseEntity.status(403).body("Password already set.");
         }
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setStatus(AdminStatus.ACTIVE);  // ✅ Activate account
+        user.setStatus(AdminStatus.ACTIVE);
         userRepository.save(user);
 
         return ResponseEntity.ok("Password set successfully!");
