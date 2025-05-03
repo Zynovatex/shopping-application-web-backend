@@ -1,63 +1,35 @@
-package com.example.virtual_city.model;
+package com.example.virtual_city.dto;
 
-import jakarta.persistence.*;
-import lombok.*;
-
+import lombok.Data;
 import java.util.List;
 
-@Entity
-@Table(name = "shops")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class Shop {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Data
+public class ShopDTO {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false) // ✅ Links shop to seller
-    private User seller;
-
-    @Column(nullable = false)
     private String shopName;
-
     private String address;
     private String category;
     private String district;
     private String area;
     private String shopType;
     private boolean deliveryAvailable;
-    @Column(name = "description", length = 1000)
     private String description;
-
-
-    @ElementCollection
-    private List<String> shopImages; // ✅ Store Image URLs as Strings
-
-    // ✅ Registration Details
+    private List<String> shopImages; // ✅ Receive Image URLs from Frontend
     private String registrationNumber;
     private String taxNumber;
     private boolean vatRegistered;
     private String registrationType;
-
-    @ElementCollection
-    private List<String> registrationDocuments; // ✅ Store Document URLs as Strings
-
-    // ✅ Payment Details
+    private List<String> registrationDocuments; // ✅ Receive Document URLs from Frontend
     private boolean cashOnDelivery;
     private boolean onlinePayment;
     private boolean mobilePayment;
 
-    private boolean approved = false; // ✅ Requires admin approval
-
-    public User getSeller() {
-        return seller;
+    public String getShopType() {
+        return shopType;
     }
 
-    public void setSeller(User seller) {
-        this.seller = seller;
+    public void setShopType(String shopType) {
+        this.shopType = shopType;
     }
 
     public String getShopName() {
@@ -98,14 +70,6 @@ public class Shop {
 
     public void setArea(String area) {
         this.area = area;
-    }
-
-    public String getShopType() {
-        return shopType;
-    }
-
-    public void setShopType(String shopType) {
-        this.shopType = shopType;
     }
 
     public boolean isDeliveryAvailable() {
@@ -194,21 +158,5 @@ public class Shop {
 
     public void setMobilePayment(boolean mobilePayment) {
         this.mobilePayment = mobilePayment;
-    }
-
-    public boolean isApproved() {
-        return approved;
-    }
-
-    public void setApproved(boolean approved) {
-        this.approved = approved;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 }

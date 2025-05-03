@@ -1,56 +1,103 @@
 package com.example.virtual_city.service;
 
-import com.example.virtual_city.dto.ProductResponseDTO;
-import com.example.virtual_city.dto.ShopListResponseDTO;
-import com.example.virtual_city.dto.ShopResponseDTO;
-import com.example.virtual_city.model.Product;
+import com.example.virtual_city.dto.ShopDTO;
 import com.example.virtual_city.model.Shop;
+import com.example.virtual_city.model.User;
 import com.example.virtual_city.repository.ShopRepository;
+import com.example.virtual_city.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class ShopService {
-
     private final ShopRepository shopRepository;
+    private final UserRepository userRepository;
 
-    public ShopService(ShopRepository shopRepository) {
+    public ShopService(ShopRepository shopRepository, UserRepository userRepository) {
         this.shopRepository = shopRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<ShopListResponseDTO> getAllShops() {
-        return shopRepository.findAllWithRatings();
+    public Shop registerShop(String sellerEmail, ShopDTO shopDTO) {
+        // ✅ Validate seller existence
+        User seller = userRepository.findByEmail(sellerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found"));
+
+        // ✅ Validate required fields
+        if (shopDTO.getShopName() == null || shopDTO.getShopName().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shop name is required.");
+        }
+
+        if (shopDTO.getAddress() == null || shopDTO.getAddress().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shop address is required.");
+        }
+
+        if (shopDTO.getCategory() == null || shopDTO.getCategory().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shop category is required.");
+        }
+
+        if (shopDTO.getDistrict() == null || shopDTO.getDistrict().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "District is required.");
+        }
+
+        if (shopDTO.getShopImages() == null || shopDTO.getShopImages().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one shop image is required.");
+        }
+
+        // ✅ Create a new shop instance
+        Shop shop = new Shop();
+        shop.setSeller(seller);
+        shop.setShopName(shopDTO.getShopName());
+        shop.setAddress(shopDTO.getAddress());
+        shop.setCategory(shopDTO.getCategory());
+        shop.setDistrict(shopDTO.getDistrict());
+        shop.setArea(shopDTO.getArea());
+        shop.setShopType(shopDTO.getShopType());
+        shop.setDeliveryAvailable(shopDTO.isDeliveryAvailable());
+        shop.setDescription(shopDTO.getDescription());
+        shop.setShopImages(shopDTO.getShopImages()); // ✅ Store image URLs
+        shop.setRegistrationNumber(shopDTO.getRegistrationNumber());
+        shop.setTaxNumber(shopDTO.getTaxNumber());
+        shop.setVatRegistered(shopDTO.isVatRegistered());
+        shop.setRegistrationType(shopDTO.getRegistrationType());
+        shop.setRegistrationDocuments(shopDTO.getRegistrationDocuments()); // ✅ Store document URLs
+        shop.setCashOnDelivery(shopDTO.isCashOnDelivery());
+        shop.setOnlinePayment(shopDTO.isOnlinePayment());
+        shop.setMobilePayment(shopDTO.isMobilePayment());
+
+        try {
+            return shopRepository.save(shop);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred while saving the shop.");
+        }
     }
 
-    public ShopResponseDTO getShopWithProducts(Long id) {
-        return shopRepository.findById(id)
-                .map(this::mapToDTO)
-                .orElse(null);
+    // NEW: return all approved shops for public listing
+    public List<Shop> getAllApprovedShops() {
+        return shopRepository.findByApprovedTrue();
     }
 
-    private ShopResponseDTO mapToDTO(Shop shop) {
-        return ShopResponseDTO.builder()
-                .id(shop.getId())
-                .name(shop.getName())
-                .category(shop.getCategory())
-                .isClosed(shop.isClosed())
-                .type(shop.getType())
-                .offersDelivery(shop.isOffersDelivery())
-                .offersTakeaway(shop.isOffersTakeaway())
-                .status(shop.getStatus())
-                .imageUrl(shop.getImageUrl())
-                .products(shop.getProducts().stream().map(this::mapToProductDTO).toList())
-                .build();
+    // NEW: get one approved shop by ID
+    public Shop getApprovedShop(Long id) {
+        return shopRepository.findByIdAndApprovedTrue(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Shop not found or not approved"));
     }
 
-    private ProductResponseDTO mapToProductDTO(Product product) {
-        return ProductResponseDTO.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .imageUrl(product.getImageUrl())
-                .build();
+    // ✅ New method: Verify if a seller owns a shop
+    public Shop verifySellerOwnsShop(User seller) {
+        return shopRepository.findBySeller(seller)
+                .stream()
+                .findFirst() // ✅ Get the first shop owned by the seller
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seller does not own a shop"));
+    }
+
+    // ✅ New method to fetch all shops
+    public List<Shop> getAllShops() {
+        return shopRepository.findAll(); // Retrieve all shops from the database
     }
 }

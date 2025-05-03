@@ -1,43 +1,18 @@
-package com.example.virtual_city.model;
+package com.example.virtual_city.dto;
 
-import jakarta.persistence.*;
-import lombok.*;
-
+import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity
-@Table(name = "products")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    private User seller;  // ✅ Product belongs to a seller
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", nullable = false)
-    private Shop shop;
-
-
+@Data
+public class ProductDTO {
+    private Long shopId;
     private String productName;
     private String description;
     private int quantity;
     private String brand;
-
-    @ElementCollection
-    private List<String> images;  // ✅ Store Firebase image URLs as strings
-
-    @ElementCollection
-    private List<String> categories;  // ✅ Multiple categories per product
-
+    private List<String> images;  // ✅ Firebase image URLs
+    private List<String> categories;
     private double price;
     private double discountPrice;
     private String ingredients;
@@ -47,38 +22,16 @@ public class Product {
     // SEO Fields
     private String seoTitle;
     private String seoDescription;
-
-    @ElementCollection
     private List<String> tags;
 
-    @ElementCollection
     private List<String> sizes;
-
-    // Dimensions
     private double weight;
     private double height;
     private double volume;
 
-    @ElementCollection
     private List<String> shippingCountries;
     private int estimatedDeliveryTime;
     private double shippingCost;
-
-    public User getSeller() {
-        return seller;
-    }
-
-    public void setSeller(User seller) {
-        this.seller = seller;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getProductName() {
         return productName;
@@ -248,11 +201,11 @@ public class Product {
         this.shippingCost = shippingCost;
     }
 
-    public Shop getShop() {
-        return shop;
+    public Long getShopId() {
+        return shopId;
     }
 
-    public void setShop(Shop shop) {
-        this.shop = shop;
+    public void setShopId(Long shopId) {
+        this.shopId = shopId;
     }
 }
