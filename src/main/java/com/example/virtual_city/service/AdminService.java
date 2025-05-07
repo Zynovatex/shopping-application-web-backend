@@ -82,10 +82,7 @@ public class AdminService {
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + adminId));
 
-        if (!admin.getRole().getName().equals("ROLE_ADMIN")) {
-            throw new RuntimeException("Target user is not an admin");
-        }
-
+        // ✅ Update basic details
         if (dto.getName() != null) {
             admin.setName(dto.getName());
         }
@@ -102,6 +99,19 @@ public class AdminService {
 
         if (dto.getAllowedModules() != null) {
             admin.setAllowedModules(dto.getAllowedModules());
+        }
+
+        // ✅ Update profile picture
+//        if (dto.getPhoto() != null) {
+//            admin.setPhoto(dto.getPhoto());
+//        }
+
+        // ✅ Update password (with current password validation)
+        if (dto.getPassword() != null && dto.getOldPassword() != null) {
+            if (!passwordEncoder.matches(dto.getOldPassword(), admin.getPassword())) {
+                throw new RuntimeException("Incorrect current password");
+            }
+            admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
         userRepository.save(admin);

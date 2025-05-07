@@ -57,9 +57,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
                         // ✅ Admin access configuration
-                        .requestMatchers(HttpMethod.GET, "/api/admin/overview").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/overview-data").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN") // ✅ UPDATED PATH
                         .requestMatchers(HttpMethod.POST, "/api/admin/create").hasAuthority("ROLE_SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/admin/admins/*/reset-password").hasAuthority("ROLE_SUPER_ADMIN") // FIXED LINE
+                        .requestMatchers(HttpMethod.POST, "/api/admin/admins/*/reset-password").hasAuthority("ROLE_SUPER_ADMIN")
                         .requestMatchers("/api/admin/dashboard").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPER_ADMIN")
 

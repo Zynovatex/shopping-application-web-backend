@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/overview-data") // ✅ changed path to avoid conflict
+@RequestMapping("/api/admin/overview-data") // ✅ Updated path to match frontend & security config
 @RequiredArgsConstructor
 public class AdminOverviewController {
 

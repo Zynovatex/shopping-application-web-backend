@@ -3,6 +3,7 @@ package com.example.virtual_city.dto;
 import com.example.virtual_city.model.User;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -11,10 +12,11 @@ public class AdminResponseDTO {
     private String adminId;
     private String name;
     private String email;
-    private String photo; // You can replace with profile image field if you add it later
+    private String photo;
     private String role;
     private String status;
     private String lastLogin;
+    private LocalDateTime createdAt;  // ✅ NEW
     private List<String> categories;
 
     public static AdminResponseDTO fromEntity(User user) {
@@ -23,10 +25,11 @@ public class AdminResponseDTO {
         dto.setAdminId(user.getAdminId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
-        dto.setPhoto("https://i.pravatar.cc/150?u=" + user.getEmail()); // Placeholder image
+        dto.setPhoto(user.getPhoto() != null ? user.getPhoto() : "https://i.pravatar.cc/150?u=" + user.getEmail());
         dto.setRole(user.getRole().getName());
         dto.setStatus(user.getStatus().name());
         dto.setLastLogin(user.getLastLogin());
+        dto.setCreatedAt(user.getCreatedAt()); // ✅ map createdAt
         dto.setCategories(user.getAllowedModules());
         return dto;
     }

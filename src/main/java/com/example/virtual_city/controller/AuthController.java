@@ -48,6 +48,10 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
+        // ✅ Update lastLogin before generating the token
+        user.setLastLogin(java.time.LocalDateTime.now().toString());
+        userRepository.save(user);
+
         String token = jwtUtil.generateToken(user);
 
         Map<String, Object> response = new HashMap<>();
@@ -56,6 +60,7 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestBody ForgotPasswordRequest request) {

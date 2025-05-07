@@ -1,9 +1,6 @@
 package com.example.virtual_city.controller;
 
-import com.example.virtual_city.dto.CreateAdminRequest;
-import com.example.virtual_city.dto.AdminResponseDTO;
-import com.example.virtual_city.dto.ResetPasswordRequest;
-import com.example.virtual_city.dto.UpdateAdminRequestDTO;
+import com.example.virtual_city.dto.*;
 import com.example.virtual_city.model.AdminStatus;
 import com.example.virtual_city.model.Role;
 import com.example.virtual_city.model.User;
@@ -18,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -69,6 +66,7 @@ public class AdminController {
         newAdmin.setSuperAdmin(false);
         newAdmin.setStatus(AdminStatus.PENDING);
         newAdmin.setAllowedModules(request.getAllowedModules());
+        newAdmin.setCreatedAt(LocalDateTime.now());
 
         userRepository.save(newAdmin);
         emailService.sendAdminInvitationEmail(newAdmin);
@@ -95,7 +93,6 @@ public class AdminController {
         return ResponseEntity.ok(admin);
     }
 
-    // ✅ Reset Admin Password (Super Admin must confirm their own password)
     @PostMapping("/admins/{id}/reset-password")
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
     public ResponseEntity<String> resetAdminPassword(
@@ -118,9 +115,9 @@ public class AdminController {
         User targetAdmin = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Admin not found."));
 
-        String newTempPassword = "Temp@1234"; // You can randomize this in future
+        String newTempPassword = "Temp@1234";
         targetAdmin.setPassword(passwordEncoder.encode(newTempPassword));
-        targetAdmin.setStatus(AdminStatus.PENDING); // Mark status as pending so user must reset
+        targetAdmin.setStatus(AdminStatus.PENDING);
         userRepository.save(targetAdmin);
 
         emailService.sendAdminResetPasswordEmail(targetAdmin);
@@ -129,12 +126,44 @@ public class AdminController {
     }
 
     @PutMapping("/admins/{id}")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
     public ResponseEntity<String> updateAdminDetails(
             @PathVariable Long id,
             @RequestBody UpdateAdminRequestDTO dto
     ) {
-        adminService.updateAdmin(id, dto);
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Admin not found.");
+        }
+
+        User admin = userOpt.get();
+
+        if (dto.getName() != null) admin.setName(dto.getName());
+        if (dto.getStatus() != null) admin.setStatus(AdminStatus.valueOf(dto.getStatus()));
+        if (dto.getPhoto() != null) admin.setPhoto(dto.getPhoto());
+        if (dto.getAllowedModules() != null) admin.setAllowedModules(dto.getAllowedModules());
+
+        if (dto.getPassword() != null && dto.getOldPassword() != null) {
+            if (!passwordEncoder.matches(dto.getOldPassword(), admin.getPassword())) {
+                return ResponseEntity.status(403).body("Incorrect current password");
+            }
+            admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        userRepository.save(admin);
         return ResponseEntity.ok("Admin details updated successfully.");
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<AdminResponseDTO> getCurrentAdminInfo() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        return ResponseEntity.ok(AdminResponseDTO.fromEntity(userOpt.get()));
     }
 }

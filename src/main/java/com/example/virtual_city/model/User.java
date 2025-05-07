@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -16,16 +17,12 @@ import java.util.List;
 @AllArgsConstructor
 public class User {
 
-    @Column(name = "admin_id", unique = true)
-    private String adminId;
-
-    @Column(name = "last_login")
-    private String lastLogin;
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "admin_id", unique = true)
+    private String adminId;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -35,6 +32,15 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "last_login")
+    private String lastLogin;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now(); // auto-set on insert
+
+    @Column(name = "photo")
+    private String photo; // base64 or image URL
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
