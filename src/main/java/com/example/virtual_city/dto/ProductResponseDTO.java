@@ -221,6 +221,13 @@ public class ProductResponseDTO {
         dto.setProductName(product.getProductName());
         dto.setPrice(product.getPrice());
         dto.setDescription(product.getDescription());
+        dto.setImages(product.getImages());
+        dto.setCategories(product.getCategories());
+        dto.setDiscountPrice(product.getDiscountPrice());
+        dto.setQuantity(product.getQuantity());
+        dto.setDescription(product.getDescription());
+        dto.setDescription(product.getDescription());
+
         // pick first image if available
         if (!product.getImages().isEmpty()) {
             dto.setImageUrl(product.getImages().get(0));

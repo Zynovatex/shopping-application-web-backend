@@ -45,12 +45,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // Configure endpoint authorization
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/shops").permitAll()
+                        .requestMatchers("/api/shops/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")  // ✅ Only ADMIN can access
                         .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")  // ✅ Only SELLER can access
                         .requestMatchers("/api/buyer/**").hasAuthority("ROLE_BUYER")// ✅ Only BUYER can access
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/shops/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Set session management to stateless

@@ -50,5 +50,29 @@ public class Token {
     public void setUser(User user) {
         this.user = user;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public TokenType getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(TokenType tokenType) {
+        this.tokenType = tokenType;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
 }
 

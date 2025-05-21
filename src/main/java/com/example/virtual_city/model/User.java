@@ -32,6 +32,10 @@ public class User {
 
     private boolean enabled = true;
 
+    @Column(length = 500)
+    private String profilePictureUrl; // stores image URL (e.g. Firebase)
+
+
     // Manually adding getter methods
 
     public String getEmail() {
@@ -57,5 +61,29 @@ public class User {
     }
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }
