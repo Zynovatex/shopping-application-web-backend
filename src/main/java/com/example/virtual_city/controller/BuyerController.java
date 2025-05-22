@@ -24,10 +24,9 @@ public class BuyerController {
         return "Buyer Dashboard - Access Restricted to Buyers";
     }
 
-
-    //Cart and Order
+    // Add item to cart
     @PostMapping("/cart/add")
-    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only BUYERS can add to cart
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
     public Cart addToCart(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CartItem cartItem) {
         if (userDetails == null) {
             throw new RuntimeException("User not authenticated");
@@ -35,8 +34,9 @@ public class BuyerController {
         return cartService.addToCart(userDetails.getUsername(), cartItem);
     }
 
+    // Get cart
     @GetMapping("/cart")
-    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only buyers can view their cart
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
     public Cart getCart(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             throw new RuntimeException("User not authenticated");
@@ -44,8 +44,9 @@ public class BuyerController {
         return cartService.getCartForBuyer(userDetails.getUsername());
     }
 
+    // Remove item from cart
     @DeleteMapping("/cart/remove")
-    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only BUYERS can remove items
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
     public Cart removeFromCart(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Long productId) {
         if (userDetails == null) {
             throw new RuntimeException("User not authenticated");
@@ -53,8 +54,9 @@ public class BuyerController {
         return cartService.removeItemFromCart(userDetails.getUsername(), productId);
     }
 
+    // Update cart quantity
     @PutMapping("/cart/update")
-    @PreAuthorize("hasAuthority('ROLE_BUYER')")  // ✅ Only BUYERS can update cart
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
     public Cart updateCartQuantity(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam Long productId,
@@ -65,8 +67,4 @@ public class BuyerController {
         }
         return cartService.updateCartQuantity(userDetails.getUsername(), productId, quantity);
     }
-
-
-
 }
-

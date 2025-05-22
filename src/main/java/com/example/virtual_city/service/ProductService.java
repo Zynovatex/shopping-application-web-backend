@@ -1,6 +1,5 @@
 package com.example.virtual_city.service;
 
-
 import com.example.virtual_city.dto.ProductDTO;
 import com.example.virtual_city.dto.ProductResponseDTO;
 import com.example.virtual_city.model.Product;
@@ -31,7 +30,6 @@ public class ProductService {
         User seller = userRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Seller not found"));
 
-        // ✅ Ensure the seller owns a shop
         Shop shop = shopService.verifySellerOwnsShop(seller);
 
         Product product = new Product();
@@ -40,7 +38,7 @@ public class ProductService {
         product.setDescription(productDTO.getDescription());
         product.setQuantity(productDTO.getQuantity());
         product.setBrand(productDTO.getBrand());
-        product.setImages(productDTO.getImages());  // ✅ Store Firebase URLs as strings
+        product.setImages(productDTO.getImages());
         product.setCategories(productDTO.getCategories());
         product.setPrice(productDTO.getPrice());
         product.setDiscountPrice(productDTO.getDiscountPrice());
@@ -61,7 +59,6 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    //Get product details from db
     public ProductResponseDTO getProductById(Long id) {
         Product p = productRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
@@ -99,8 +96,6 @@ public class ProductService {
         dto.setShippingCost(p.getShippingCost());
         dto.setImages(p.getImages());
         dto.setCategories(p.getCategories());
-        // …set all other fields…
         return dto;
     }
-
 }

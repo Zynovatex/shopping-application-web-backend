@@ -13,8 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/seller/shop")
 public class SellerController {
@@ -25,8 +23,8 @@ public class SellerController {
         this.shopService = shopService;
         this.productService = productService;
     }
-    //Business Registration and Authorization
 
+    // Business Registration and Authorization
     @PostMapping("/register")
     public Shop registerShop(@AuthenticationPrincipal(errorOnInvalidType=true) UserDetails userDetails, @RequestBody ShopDTO shopDTO) {
         if (userDetails == null) {
@@ -35,16 +33,15 @@ public class SellerController {
         return shopService.registerShop(userDetails.getUsername(), shopDTO);
     }
 
-    //Product Listing & Inventory
+    // Product Listing & Inventory
     @PostMapping("/product/add")
-    @PreAuthorize("hasAuthority('ROLE_SELLER')")  // ✅ Restrict to sellers only
+    @PreAuthorize("hasAuthority('ROLE_SELLER')")  // Restrict to sellers only
     public Product addProduct(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ProductDTO productDTO) {
         if (userDetails == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
-        String sellerEmail = userDetails.getUsername();  // ✅ Extract email from logged-in user
+        String sellerEmail = userDetails.getUsername();  // Extract email from logged-in user
         return productService.addProduct(sellerEmail, productDTO);
     }
-
 }

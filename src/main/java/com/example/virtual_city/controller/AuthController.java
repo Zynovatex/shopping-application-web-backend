@@ -1,16 +1,11 @@
 package com.example.virtual_city.controller;
 
-import com.example.virtual_city.dto.ForgotPasswordRequest;
-import com.example.virtual_city.dto.LoginRequest;
-import com.example.virtual_city.dto.RegisterRequest;
-import com.example.virtual_city.dto.ResetPasswordRequest;
-import com.example.virtual_city.dto.SetPasswordRequest;
+import com.example.virtual_city.dto.*;
 import com.example.virtual_city.model.AdminStatus;
 import com.example.virtual_city.model.User;
 import com.example.virtual_city.repository.UserRepository;
 import com.example.virtual_city.service.AuthService;
 import com.example.virtual_city.service.EmailService;
-import com.example.virtual_city.service.UserDetailsImpl;
 import com.example.virtual_city.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +43,7 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // ✅ Update lastLogin before generating the token
+        // Update lastLogin before generating token
         user.setLastLogin(java.time.LocalDateTime.now().toString());
         userRepository.save(user);
 
@@ -60,7 +55,6 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
 
     @PostMapping("/send-otp")
     public ResponseEntity<String> sendOtp(@RequestBody ForgotPasswordRequest request) {
@@ -79,13 +73,13 @@ public class AuthController {
                 : ResponseEntity.badRequest().body("Invalid OTP");
     }
 
-    // ✅ Set password for invited admins using AdminStatus check
+    // Set password for invited admins using status check
     @PostMapping("/set-password")
     public ResponseEntity<String> setPassword(@RequestBody SetPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ✅ Check if password was already set by verifying status
+        // Check if password is already set by verifying status
         if (user.getStatus() != AdminStatus.PENDING) {
             return ResponseEntity.status(403).body("Password already set.");
         }

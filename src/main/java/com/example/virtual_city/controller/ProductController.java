@@ -13,7 +13,10 @@ import java.util.List;
 @RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
-    public ProductController(ProductService ps) { this.productService = ps; }
+
+    public ProductController(ProductService ps) {
+        this.productService = ps;
+    }
 
     @GetMapping("/{id}")
     public ProductResponseDTO getById(@PathVariable Long id) {

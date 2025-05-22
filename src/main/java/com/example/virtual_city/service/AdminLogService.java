@@ -15,18 +15,13 @@ public class AdminLogService {
         this.adminLogRepository = adminLogRepository;
     }
 
-    // ✅ Get all logs sorted by timestamp (newest first)
+    // Get all logs sorted by timestamp (newest first)
     public List<AdminLog> getAllLogs() {
         return adminLogRepository.findAllByOrderByTimestampDesc();
     }
 
-    // ✅ Save a new log entry
+    // Save a new log entry
     public void saveLog(AdminLog log) {
         adminLogRepository.save(log);
     }
-
-//     🔄 Future Enhancement:
-//     public List<AdminLog> getLogsByAdminId(String adminId) {
-//         return adminLogRepository.findByAdminIdOrderByTimestampDesc(adminId);
-//     }
 }

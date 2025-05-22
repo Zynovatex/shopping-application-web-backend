@@ -1,6 +1,5 @@
 package com.example.virtual_city.service;
 
-
 import com.example.virtual_city.model.Cart;
 import com.example.virtual_city.model.CartItem;
 import com.example.virtual_city.repository.CartRepository;
@@ -37,7 +36,7 @@ public class CartService {
         }
 
         cart.getItems().remove(productId);
-        cartRepository.saveCart(buyerEmail, cart);  // ✅ Save updated cart after removal
+        cartRepository.saveCart(buyerEmail, cart);
         return cart;
     }
 
@@ -50,12 +49,8 @@ public class CartService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found in cart");
         }
 
-        cartItem.setQuantity(quantity); // ✅ Update the quantity
-        cartRepository.saveCart(buyerEmail, cart); // ✅ Save updated cart
+        cartItem.setQuantity(quantity);
+        cartRepository.saveCart(buyerEmail, cart);
         return cart;
     }
-
-
-
 }
-

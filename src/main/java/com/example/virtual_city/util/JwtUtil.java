@@ -11,20 +11,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.example.virtual_city.model.User;
+
 @Component
 public class JwtUtil {
     private static final String SECRET_KEY = "your_secret_key_your_secret_key_your"; // Must be at least 32 characters
 
     public JwtUtil(TokenService tokenService) {
+        // Constructor - inject TokenService if needed
     }
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // ✅ Updated: Now includes role as "authorities" claim
+    // ✅ Includes role as "authorities" claim
     public String generateToken(User user) {
-        String role = user.getRole().getName(); // Assuming Role has a getName() like "ROLE_ADMIN"
+        String role = user.getRole().getName(); // Example: "ROLE_ADMIN"
 
         Map<String, Object> claims = Map.of(
                 "authorities", List.of(role),
@@ -40,8 +42,7 @@ public class JwtUtil {
                 .compact();
     }
 
-
-    // Still supports custom claims if needed elsewhere
+    // Supports custom claims
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)

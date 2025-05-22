@@ -82,7 +82,7 @@ public class AdminService {
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + adminId));
 
-        // ✅ Update basic details
+        // Update basic details
         if (dto.getName() != null) {
             admin.setName(dto.getName());
         }
@@ -101,12 +101,7 @@ public class AdminService {
             admin.setAllowedModules(dto.getAllowedModules());
         }
 
-        // ✅ Update profile picture
-//        if (dto.getPhoto() != null) {
-//            admin.setPhoto(dto.getPhoto());
-//        }
-
-        // ✅ Update password (with current password validation)
+        // Update password (with current password validation)
         if (dto.getPassword() != null && dto.getOldPassword() != null) {
             if (!passwordEncoder.matches(dto.getOldPassword(), admin.getPassword())) {
                 throw new RuntimeException("Incorrect current password");

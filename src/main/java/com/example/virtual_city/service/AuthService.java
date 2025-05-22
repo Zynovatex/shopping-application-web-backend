@@ -81,7 +81,6 @@ public class AuthService {
         return true;
     }
 
-    // ✅ Modified: Includes permissions in JWT using user entity
     public String login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -90,10 +89,9 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return jwtUtil.generateToken(user); // ✅ Permissions + Role included
+        return jwtUtil.generateToken(user);
     }
 
-    // 🆕 Super Admin password confirmation for reset action
     public boolean validateSuperAdminPassword(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Super Admin not found"));

@@ -33,12 +33,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestPath = request.getRequestURI();
 
-        // ✅ Bypass JWT filter for auth endpoints
-        if (
-                requestPath.startsWith("/api/auth") ||
-                        requestPath.equals("/") ||
-                        requestPath.contains("/public")
-        ) {
+        // Bypass JWT filter for auth endpoints
+        if (requestPath.startsWith("/api/auth") ||
+                requestPath.equals("/") ||
+                requestPath.contains("/public")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -64,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
-                                userDetails.getAuthorities() // ✅ Must include authorities here
+                                userDetails.getAuthorities()
                         );
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -1,6 +1,4 @@
-//Create API to fetch user profile after login
 package com.example.virtual_city.controller;
-
 
 import com.example.virtual_city.model.User;
 import com.example.virtual_city.repository.UserRepository;
@@ -19,6 +17,7 @@ public class CurrentUserController {
 
     @GetMapping("/profile")
     public User getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

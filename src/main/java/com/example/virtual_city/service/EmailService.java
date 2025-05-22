@@ -25,7 +25,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(body, true); // Enable HTML rendering
+            helper.setText(body, true);
             mailSender.send(message);
             logger.info("Email sent to {}", to);
         } catch (MessagingException e) {
@@ -34,7 +34,6 @@ public class EmailService {
         }
     }
 
-    // ✅ Send email to new admin for setting initial password
     public void sendAdminInvitationEmail(User admin) {
         if (admin.getEmail() == null || admin.getName() == null) {
             throw new IllegalArgumentException("Admin email or name is null");
@@ -60,7 +59,6 @@ public class EmailService {
         sendEmail(admin.getEmail(), subject, body);
     }
 
-    // ✅ Send email to existing admin to reset password
     public void sendAdminResetPasswordEmail(User admin) {
         if (admin.getEmail() == null || admin.getName() == null) {
             throw new IllegalArgumentException("Admin email or name is null");

@@ -1,6 +1,5 @@
 package com.example.virtual_city.config;
 
-
 import com.example.virtual_city.model.Cart;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
